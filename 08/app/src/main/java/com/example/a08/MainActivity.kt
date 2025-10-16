@@ -32,11 +32,10 @@ class MainActivity : AppCompatActivity() {
             if (!canConfirmAdult) binding.cbAdult.isChecked = false
         }
 
-        // Reaguj na změnu věku
         binding.etAge.doAfterTextChanged { updateAdultGate() }
         updateAdultGate() // inicializace
 
-        // ULOŽIT
+        // ULOZIT
         binding.btnSave.setOnClickListener {
             val name = binding.etName.text?.toString()?.trim().orEmpty()
             val ageText = binding.etAge.text?.toString()?.trim().orEmpty()
@@ -47,7 +46,6 @@ class MainActivity : AppCompatActivity() {
                 return@setOnClickListener
             }
 
-            // Když je 18+ a checkbox není zaškrtnutý → varování a STOP
             if (age >= 18 && !binding.cbAdult.isChecked) {
                 Toast.makeText(this, "Jsi 18+, potvrď to zaškrtnutím.", Toast.LENGTH_SHORT).show()
                 return@setOnClickListener
@@ -62,7 +60,7 @@ class MainActivity : AppCompatActivity() {
             Toast.makeText(this, "Uloženo.", Toast.LENGTH_SHORT).show()
         }
 
-        // NAČÍST
+        // NACIST
         binding.btnLoad.setOnClickListener {
             val name = sp.getString(KEY_NAME, "")
             val age = sp.getInt(KEY_AGE, 0)
@@ -71,9 +69,7 @@ class MainActivity : AppCompatActivity() {
             binding.etName.setText(name)
             binding.etAge.setText(if (age == 0) "" else age.toString())
 
-            // znovu aplikuj gate po načtení věku
             updateAdultGate()
-            // checkbox nastav jen pokud to věk dovolí
             if (age >= 18) {
                 binding.cbAdult.isChecked = adult
             } else {
