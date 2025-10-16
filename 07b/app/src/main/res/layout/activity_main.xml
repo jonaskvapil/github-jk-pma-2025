@@ -1,0 +1,52 @@
+<?xml version="1.0" encoding="utf-8"?>
+<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:id="@+id/root"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:padding="12dp"
+    android:background="#101214">
+
+    <!-- Fake toolbar -->
+    <TextView
+        android:id="@+id/titleBar"
+        android:layout_width="match_parent"
+        android:layout_height="48dp"
+        android:gravity="center_vertical"
+        android:paddingStart="16dp"
+        android:text="07b • Fragments Demo"
+        android:textStyle="bold"
+        android:textColor="#FFFFFF"
+        android:background="#22272B"
+        android:elevation="4dp"
+        android:layout_alignParentTop="true"/>
+
+    <!-- Switch buttons -->
+    <Button
+        android:id="@+id/btnFragment1"
+        android:layout_width="wrap_content"
+        android:layout_height="40dp"
+        android:text="Fragment 1"
+        android:layout_below="@id/titleBar"
+        android:layout_alignParentStart="true"
+        android:layout_marginTop="8dp"/>
+
+    <Button
+        android:id="@+id/btnFragment2"
+        android:layout_width="wrap_content"
+        android:layout_height="40dp"
+        android:text="Fragment 2"
+        android:layout_below="@id/titleBar"
+        android:layout_toEndOf="@id/btnFragment1"
+        android:layout_marginStart="8dp"
+        android:layout_marginTop="8dp"/>
+
+    <!-- Fragment container -->
+    <FrameLayout
+        android:id="@+id/fragmentContainer"
+        android:layout_width="match_parent"
+        android:layout_height="0dp"
+        android:layout_below="@id/btnFragment1"
+        android:layout_alignParentBottom="true"
+        android:layout_marginTop="8dp"
+        android:background="#161A1D"/>
+</RelativeLayout>
