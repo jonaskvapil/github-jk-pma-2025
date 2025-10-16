@@ -7,6 +7,7 @@ import androidx.activity.enableEdgeToEdge
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.view.ViewCompat
 import androidx.core.view.WindowInsetsCompat
+import androidx.core.widget.doAfterTextChanged
 import com.example.a08.databinding.ActivityMainBinding
 
 class MainActivity : AppCompatActivity() {
@@ -23,7 +24,19 @@ class MainActivity : AppCompatActivity() {
         setContentView(binding.root)
 
         val sp = getSharedPreferences(prefsName, Context.MODE_PRIVATE)
+        val editor = sp.edit()
+        fun updateAdultGate() {
+            val age = binding.etAge.text?.toString()?.toIntOrNull() ?: 0
+            val canConfirmAdult = age >= 18
+            binding.cbAdult.isEnabled = canConfirmAdult
+            if (!canConfirmAdult) binding.cbAdult.isChecked = false
+        }
 
+        // Reaguj na změnu věku
+        binding.etAge.doAfterTextChanged { updateAdultGate() }
+        updateAdultGate() // inicializace
+
+        // ULOŽIT
         binding.btnSave.setOnClickListener {
             val name = binding.etName.text?.toString()?.trim().orEmpty()
             val ageText = binding.etAge.text?.toString()?.trim().orEmpty()
@@ -31,6 +44,12 @@ class MainActivity : AppCompatActivity() {
 
             if (name.isEmpty() || age == null) {
                 Toast.makeText(this, "Vyplň jméno a věk (číslo).", Toast.LENGTH_SHORT).show()
+                return@setOnClickListener
+            }
+
+            // Když je 18+ a checkbox není zaškrtnutý → varování a STOP
+            if (age >= 18 && !binding.cbAdult.isChecked) {
+                Toast.makeText(this, "Jsi 18+, potvrď to zaškrtnutím.", Toast.LENGTH_SHORT).show()
                 return@setOnClickListener
             }
 
@@ -43,6 +62,7 @@ class MainActivity : AppCompatActivity() {
             Toast.makeText(this, "Uloženo.", Toast.LENGTH_SHORT).show()
         }
 
+        // NAČÍST
         binding.btnLoad.setOnClickListener {
             val name = sp.getString(KEY_NAME, "")
             val age = sp.getInt(KEY_AGE, 0)
@@ -50,7 +70,15 @@ class MainActivity : AppCompatActivity() {
 
             binding.etName.setText(name)
             binding.etAge.setText(if (age == 0) "" else age.toString())
-            binding.cbAdult.isChecked = adult
+
+            // znovu aplikuj gate po načtení věku
+            updateAdultGate()
+            // checkbox nastav jen pokud to věk dovolí
+            if (age >= 18) {
+                binding.cbAdult.isChecked = adult
+            } else {
+                binding.cbAdult.isChecked = false
+            }
 
             Toast.makeText(this, "Načteno.", Toast.LENGTH_SHORT).show()
         }
