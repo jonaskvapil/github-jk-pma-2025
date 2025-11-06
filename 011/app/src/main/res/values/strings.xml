@@ -1,0 +1,18 @@
+<resources>
+    <string name="app_name">Osobní Deník</string>
+    <string name="home">Domů</string>
+    <string name="profile">Profil</string>
+    <string name="add_entry">Přidat záznam</string>
+    <string name="title_hint">Název záznamu</string>
+    <string name="description_hint">Popis záznamu</string>
+    <string name="save">Uložit</string>
+    <string name="select_image">Vybrat obrázek</string>
+    <string name="mood_label">Nálada:</string>
+    <string name="mood_happy">Šťastný</string>
+    <string name="mood_neutral">Neutrální</string>
+    <string name="mood_sad">Smutný</string>
+    <string name="important">Důležité</string>
+    <string name="name_hint">Vaše jméno</string>
+    <string name="save_profile">Uložit profil</string>
+    <string name="entries_count">Počet záznamů: %d</string>
+</resources>
