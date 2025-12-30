@@ -22,7 +22,7 @@ class AddEntryActivity : AppCompatActivity() {
             selectedImageUri = it
             binding.ivSelectedImage.setImageURI(it)
 
-            // Custom Toast s ikonou (pomocí Snackbar)
+            // Custom Toast
             Snackbar.make(binding.root, "✓ Obrázek načten", Snackbar.LENGTH_SHORT).show()
         } ?: run {
             Toast.makeText(this, "Nebyl vybrán žádný obrázek", Toast.LENGTH_SHORT).show()
@@ -58,12 +58,12 @@ class AddEntryActivity : AppCompatActivity() {
             Toast.makeText(this, "Nálada: $mood", Toast.LENGTH_SHORT).show()
         }
 
-        // Uložení záznamu
+
         binding.btnSave.setOnClickListener {
             saveEntry()
         }
 
-        // Zrušení
+
         binding.btnCancel.setOnClickListener {
             finish()
         }

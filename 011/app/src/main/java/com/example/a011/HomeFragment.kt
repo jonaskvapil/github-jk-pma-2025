@@ -31,24 +31,20 @@ class HomeFragment : Fragment() {
     private fun loadData() {
         val prefs = requireContext().getSharedPreferences("diary_prefs", Context.MODE_PRIVATE)
 
-        // Načtení jména uživatele
         val userName = prefs.getString("user_name", null)
         if (userName != null) {
             binding.tvWelcome.text = "Vítej, $userName!"
         }
 
-        // Načtení počtu záznamů
         val entriesCount = prefs.getInt("entries_count", 0)
         binding.tvEntriesCount.text = "Počet záznamů: $entriesCount"
 
-        // Načtení posledního záznamu
         val lastEntry = prefs.getString("last_entry_title", null)
         binding.tvLastEntry.text = when {
             lastEntry != null -> "Poslední záznam: $lastEntry"
             else -> "Poslední záznam: Žádný"
         }
 
-        // Načtení URI obrázku, pokud existuje
         val imageUriString = prefs.getString("last_entry_image", null)
         if (imageUriString != null) {
             binding.ivHomeImage.setImageURI(android.net.Uri.parse(imageUriString))

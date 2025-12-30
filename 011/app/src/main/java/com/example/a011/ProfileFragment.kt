@@ -43,12 +43,10 @@ class ProfileFragment : Fragment() {
 
         loadProfile()
 
-        // Výběr profilového obrázku
         binding.btnSelectProfileImage.setOnClickListener {
             imagePickerLauncher.launch("image/*")
         }
 
-        // Uložení profilu
         binding.btnSaveProfile.setOnClickListener {
             saveProfile()
         }
