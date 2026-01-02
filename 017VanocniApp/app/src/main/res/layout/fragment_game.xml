@@ -1,0 +1,103 @@
+<?xml version="1.0" encoding="utf-8"?>
+<ScrollView xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent">
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="vertical"
+        android:padding="24dp"
+        android:gravity="center">
+
+        <TextView
+            android:id="@+id/textTitle"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="🎮 VÁNOČNÍ KVÍZ"
+            android:textSize="28sp"
+            android:textStyle="bold"
+            android:layout_marginBottom="16dp" />
+
+        <TextView
+            android:id="@+id/textHighScore"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="🏆 High Score: 0/5"
+            android:textSize="16sp"
+            android:gravity="center"
+            android:layout_marginBottom="8dp" />
+
+        <TextView
+            android:id="@+id/textScore"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="Skóre: 0"
+            android:textSize="18sp"
+            android:gravity="center"
+            android:layout_marginBottom="24dp" />
+
+        <TextView
+            android:id="@+id/textQuestion"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="Otázka se načítá..."
+            android:textSize="20sp"
+            android:gravity="center"
+            android:padding="16dp"
+            android:background="#E0E0E0"
+            android:layout_marginBottom="24dp"
+            android:minHeight="150dp" />
+
+        <Button
+            android:id="@+id/btnAnswer1"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="Odpověď 1"
+            android:textSize="16sp"
+            android:layout_marginBottom="12dp" />
+
+        <Button
+            android:id="@+id/btnAnswer2"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="Odpověď 2"
+            android:textSize="16sp"
+            android:layout_marginBottom="12dp" />
+
+        <Button
+            android:id="@+id/btnAnswer3"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="Odpověď 3"
+            android:textSize="16sp"
+            android:layout_marginBottom="12dp" />
+
+        <Button
+            android:id="@+id/btnAnswer4"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="Odpověď 4"
+            android:textSize="16sp"
+            android:layout_marginBottom="24dp" />
+
+        <Button
+            android:id="@+id/btnRestart"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="🔄 HRÁT ZNOVU"
+            android:textSize="18sp"
+            android:visibility="gone"
+            android:backgroundTint="#165B33" />
+        <Button
+            android:id="@+id/btnBackToSettings"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="◀ ZPĚT NA NASTAVENÍ"
+            android:textSize="16sp"
+            android:layout_marginTop="16dp"
+            android:backgroundTint="#666666" />
+
+    </LinearLayout>
+</ScrollView>
+

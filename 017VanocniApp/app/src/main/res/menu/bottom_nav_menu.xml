@@ -1,0 +1,17 @@
+<?xml version="1.0" encoding="utf-8"?>
+<menu xmlns:android="http://schemas.android.com/apk/res/android">
+    <item
+        android:id="@+id/homeFragment"
+        android:icon="@android:drawable/ic_menu_day"
+        android:title="Vánoce" />
+
+    <item
+        android:id="@+id/wishlistFragment"
+        android:icon="@android:drawable/ic_menu_edit"
+        android:title="Wishlist" />
+
+    <item
+        android:id="@+id/settingsFragment"
+        android:icon="@android:drawable/ic_menu_preferences"
+        android:title="Nastavení" />
+</menu>
