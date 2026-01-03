@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "217118733262",
+    "project_id": "investdiary-58b8c",
+    "storage_bucket": "investdiary-58b8c.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:217118733262:android:33524481f84adda368719f",
+        "android_client_info": {
+          "package_name": "com.example.investdiary"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyCVdHLRenPUn_dvLp0YVHglND9WQib-F-U"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
