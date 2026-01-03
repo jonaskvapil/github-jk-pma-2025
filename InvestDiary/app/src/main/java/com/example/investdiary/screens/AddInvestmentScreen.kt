@@ -1,5 +1,6 @@
 package com.example.investdiary.screens
 
+import android.widget.Toast
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.text.KeyboardOptions
@@ -9,11 +10,14 @@ import androidx.compose.material.icons.filled.ArrowBack
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
+import com.example.investdiary.datastore.PreferencesManager
 import com.example.investdiary.model.Investment
 import com.example.investdiary.viewmodel.InvestmentViewModel
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -32,8 +36,47 @@ fun AddInvestmentScreen(
     var expanded by remember { mutableStateOf(false) }
     var showSnackbar by remember { mutableStateOf(false) }
 
-    val types = listOf("Akcie", "ETF", "Kryptoměny", "Komodity", "Dluhopisy")
+    val scope = rememberCoroutineScope()
+    val types = listOf("Akcie", "ETF", "Kryptoměny")
     val snackbarHostState = remember { SnackbarHostState() }
+    val context = LocalContext.current // Potřebujeme kontext pro Toast
+
+    // Načtení měny z DataStore
+    val preferencesManager = remember { PreferencesManager(context) }
+    val currency by preferencesManager.currencyFlow.collectAsState(initial = "CZK")
+
+    // Definice kurzů
+    val exchangeRate = when (currency) {
+        "USD" -> 0.044
+        "EUR" -> 0.040
+        "GBP" -> 0.034
+        else -> 1.0
+    }
+
+    val isCrypto = selectedType == "Kryptoměny"
+
+    // Funkce pro validaci číselného vstupu
+    fun validateAndSetNumber(input: String, setter: (String) -> Unit) {
+        // Povolíme prázdný string (mazání)
+        if (input.isEmpty()) {
+            setter(input)
+            return
+        }
+
+        // Regex pro číslo (povoluje jednu tečku nebo čárku)
+        // Nahradíme čárku tečkou pro kontrolu
+        val normalizedInput = input.replace(',', '.')
+
+        // Zkontrolujeme, zda je to validní číslo (nebo začátek čísla)
+        val isValidNumber = normalizedInput.toDoubleOrNull() != null ||
+                normalizedInput.endsWith(".") // Povolit psaní desetinné tečky
+
+        if (isValidNumber) {
+            setter(input)
+        } else {
+            Toast.makeText(context, "Prosím zadejte pouze číslo!", Toast.LENGTH_SHORT).show()
+        }
+    }
 
     Scaffold(
         topBar = {
@@ -59,27 +102,13 @@ fun AddInvestmentScreen(
                 .verticalScroll(rememberScrollState()),
             verticalArrangement = Arrangement.spacedBy(12.dp)
         ) {
-            // Ticker
-            OutlinedTextField(
-                value = ticker,
-                onValueChange = { ticker = it.uppercase() },
-                label = { Text("Ticker *") },
-                placeholder = { Text("AAPL, MSFT, BTC...") },
-                modifier = Modifier.fillMaxWidth(),
-                singleLine = true
+            // 1. TYP INVESTICE
+            Text(
+                text = "Typ investice",
+                style = MaterialTheme.typography.titleSmall,
+                color = MaterialTheme.colorScheme.primary
             )
 
-            // Název
-            OutlinedTextField(
-                value = name,
-                onValueChange = { name = it },
-                label = { Text("Název společnosti *") },
-                placeholder = { Text("Apple Inc.") },
-                modifier = Modifier.fillMaxWidth(),
-                singleLine = true
-            )
-
-            // Typ investice (Dropdown)
             ExposedDropdownMenuBox(
                 expanded = expanded,
                 onExpandedChange = { expanded = !expanded }
@@ -88,11 +117,8 @@ fun AddInvestmentScreen(
                     value = selectedType,
                     onValueChange = {},
                     readOnly = true,
-                    label = { Text("Typ investice") },
                     trailingIcon = { ExposedDropdownMenuDefaults.TrailingIcon(expanded = expanded) },
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .menuAnchor()
+                    modifier = Modifier.fillMaxWidth().menuAnchor()
                 )
                 ExposedDropdownMenu(
                     expanded = expanded,
@@ -104,40 +130,79 @@ fun AddInvestmentScreen(
                             onClick = {
                                 selectedType = type
                                 expanded = false
+                                if (type == "Kryptoměny") name = ""
                             }
                         )
                     }
                 }
             }
 
-            // Počet kusů
+            Spacer(modifier = Modifier.height(8.dp))
+            Divider()
+            Spacer(modifier = Modifier.height(8.dp))
+
+            // 2. OSTATNÍ ÚDAJE
+            Text(
+                text = "Detaily",
+                style = MaterialTheme.typography.titleSmall,
+                color = MaterialTheme.colorScheme.primary
+            )
+
+            // Ticker
+            OutlinedTextField(
+                value = ticker,
+                onValueChange = { ticker = it.uppercase() },
+                label = { Text(if (isCrypto) "Symbol (např. BTC)" else "Ticker (Symbol) *") },
+                placeholder = { Text(if (isCrypto) "BTC" else "AAPL") },
+                modifier = Modifier.fillMaxWidth(),
+                singleLine = true
+            )
+
+            // Název
+            if (!isCrypto) {
+                OutlinedTextField(
+                    value = name,
+                    onValueChange = { name = it },
+                    label = { Text("Název společnosti *") },
+                    placeholder = { Text("Apple Inc.") },
+                    modifier = Modifier.fillMaxWidth(),
+                    singleLine = true
+                )
+            }
+
+            // Počet kusů (VALIDACE)
             OutlinedTextField(
                 value = quantity,
-                onValueChange = { quantity = it },
-                label = { Text("Počet kusů *") },
-                placeholder = { Text("10") },
+                onValueChange = { input ->
+                    validateAndSetNumber(input) { quantity = it }
+                },
+                label = { Text(if (isCrypto) "Počet mincí *" else "Počet kusů *") },
                 keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Decimal),
                 modifier = Modifier.fillMaxWidth(),
                 singleLine = true
             )
 
-            // Nákupní cena
+            // Nákupní cena (VALIDACE)
             OutlinedTextField(
                 value = buyPrice,
-                onValueChange = { buyPrice = it },
-                label = { Text("Nákupní cena (Kč) *") },
-                placeholder = { Text("150.50") },
+                onValueChange = { input ->
+                    validateAndSetNumber(input) { buyPrice = it }
+                },
+                label = { Text("Nákupní cena ($currency) *") },
+                placeholder = { Text(if (currency == "CZK") "1000" else "45.5") },
                 keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Decimal),
                 modifier = Modifier.fillMaxWidth(),
                 singleLine = true
             )
 
-            // Aktuální cena
+            // Aktuální cena (VALIDACE)
             OutlinedTextField(
                 value = currentPrice,
-                onValueChange = { currentPrice = it },
-                label = { Text("Aktuální cena (Kč) *") },
-                placeholder = { Text("175.25") },
+                onValueChange = { input ->
+                    validateAndSetNumber(input) { currentPrice = it }
+                },
+                label = { Text("Aktuální cena ($currency) *") },
+                placeholder = { Text(if (currency == "CZK") "1200" else "50.0") },
                 keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Decimal),
                 modifier = Modifier.fillMaxWidth(),
                 singleLine = true
@@ -148,48 +213,54 @@ fun AddInvestmentScreen(
                 value = notes,
                 onValueChange = { notes = it },
                 label = { Text("Poznámky") },
-                placeholder = { Text("Dlouhodobá investice...") },
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .height(120.dp),
-                maxLines = 5
+                modifier = Modifier.fillMaxWidth().height(100.dp),
+                maxLines = 3
             )
 
-            Spacer(modifier = Modifier.height(8.dp))
+            Spacer(modifier = Modifier.height(16.dp))
 
             // Tlačítko Uložit
             Button(
                 onClick = {
-                    if (ticker.isNotBlank() && name.isNotBlank() &&
-                        quantity.isNotBlank() && buyPrice.isNotBlank() &&
-                        currentPrice.isNotBlank()) {
+                    val isNameValid = isCrypto || name.isNotBlank()
+
+                    // Finální kontrola formátu čísel (ošetření teček/čárek)
+                    val qty = quantity.replace(',', '.').toDoubleOrNull()
+                    val buy = buyPrice.replace(',', '.').toDoubleOrNull()
+                    val curr = currentPrice.replace(',', '.').toDoubleOrNull()
+
+                    if (ticker.isNotBlank() && isNameValid &&
+                        qty != null && buy != null && curr != null) {
+
+                        // PŘEPOČET NA CZK PRO ULOŽENÍ
+                        val finalBuyPriceCZK = buy / exchangeRate
+                        val finalCurrentPriceCZK = curr / exchangeRate
 
                         val investment = Investment(
                             ticker = ticker,
-                            name = name,
-                            quantity = quantity.toDoubleOrNull() ?: 0.0,
-                            buyPrice = buyPrice.toDoubleOrNull() ?: 0.0,
-                            currentPrice = currentPrice.toDoubleOrNull() ?: 0.0,
+                            name = if (isCrypto) ticker else name,
+                            quantity = qty,
+                            buyPrice = finalBuyPriceCZK,
+                            currentPrice = finalCurrentPriceCZK,
                             type = selectedType,
                             notes = notes
                         )
 
                         viewModel.addInvestment(investment)
-
-                        // Zobrazit Snackbar
                         showSnackbar = true
 
-                        // Vrátit se zpět po 500ms
-                        kotlinx.coroutines.GlobalScope.launch {
-                            kotlinx.coroutines.delay(500)
+                        scope.launch {
+                            delay(500)
                             onNavigateBack()
                         }
+                    } else {
+                        // Záchranný Toast, kdyby něco neprošlo přes enabled button
+                        Toast.makeText(context, "Zkontrolujte zadané údaje!", Toast.LENGTH_SHORT).show()
                     }
                 },
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .height(56.dp),
-                enabled = ticker.isNotBlank() && name.isNotBlank() &&
+                modifier = Modifier.fillMaxWidth().height(56.dp),
+                enabled = ticker.isNotBlank() &&
+                        (isCrypto || name.isNotBlank()) &&
                         quantity.isNotBlank() && buyPrice.isNotBlank() &&
                         currentPrice.isNotBlank()
             ) {
@@ -198,13 +269,9 @@ fun AddInvestmentScreen(
         }
     }
 
-    // Snackbar při úspěšném uložení
     LaunchedEffect(showSnackbar) {
         if (showSnackbar) {
-            snackbarHostState.showSnackbar(
-                message = "Investice přidána! ✅",
-                duration = SnackbarDuration.Short
-            )
+            snackbarHostState.showSnackbar("Investice přidána! ✅")
             showSnackbar = false
         }
     }

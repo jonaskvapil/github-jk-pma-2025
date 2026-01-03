@@ -67,4 +67,19 @@ class InvestmentViewModel : ViewModel() {
     fun getTotalProfitLoss(): Double {
         return _investments.value.sumOf { it.profitLoss }
     }
+    // Funkce pro získání investice podle ID (pro detail screen)
+    fun getInvestmentById(id: String?): Investment? {
+        return _investments.value.find { it.id == id }
+    }
+    fun updateInvestment(investment: Investment) {
+        viewModelScope.launch {
+            val result = repository.updateInvestment(investment)
+            // Volitelně můžeš zpracovat výsledek (úspěch/chyba),
+            // ale pro jednoduchost to zatím stačí takto, protože UI se aktualizuje přes Flow.
+            if (result.isFailure) {
+                // Můžeš sem přidat logování chyby nebo zobrazení Toastu
+                // _errorFlow.emit("Chyba při aktualizaci")
+            }
+        }
+    }
 }

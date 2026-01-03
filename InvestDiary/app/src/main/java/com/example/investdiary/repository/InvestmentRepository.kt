@@ -13,21 +13,33 @@ class InvestmentRepository {
     private val investmentsCollection = firestore.collection("investments")
 
     // Získání všech investic (real-time)
+    // ... importy ...
+
+    // Získání všech investic (real-time)
     fun getAllInvestments(): Flow<List<Investment>> = callbackFlow {
         val listener = investmentsCollection
             .orderBy("timestamp", Query.Direction.DESCENDING)
             .addSnapshotListener { snapshot, error ->
                 if (error != null) {
-                    close(error)
+                    close(error) // Zavře flow s chybou
                     return@addSnapshotListener
                 }
-                val investments = snapshot?.documents?.mapNotNull {
-                    it.toObject(Investment::class.java)?.copy(id = it.id)
+
+                val investments = snapshot?.documents?.mapNotNull { doc ->
+                    try {
+                        // Tady to může spadnout, pokud data nesedí
+                        doc.toObject(Investment::class.java)?.copy(id = doc.id)
+                    } catch (e: Exception) {
+                        e.printStackTrace() // Vypíše chybu do Logcatu, ale neshodí apku
+                        null // Přeskočíme vadný záznam
+                    }
                 } ?: emptyList()
+
                 trySend(investments)
             }
         awaitClose { listener.remove() }
     }
+
 
     // Přidání nové investice
     suspend fun addInvestment(investment: Investment): Result<String> {
@@ -59,4 +71,7 @@ class InvestmentRepository {
             Result.failure(e)
         }
     }
+    // ... ostatní funkce
+
+
 }
