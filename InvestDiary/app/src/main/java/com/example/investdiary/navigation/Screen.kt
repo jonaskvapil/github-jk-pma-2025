@@ -7,6 +7,8 @@ sealed class Screen(val route: String) {
     object Settings : Screen("settings_screen")
     object InvestmentDetail : Screen("investment_detail_screen") // <--- Tady to musí být
 
+    object Stats : Screen("stats_screen")
+
     fun withArgs(vararg args: String): String {
         return buildString {
             append(route)

@@ -31,12 +31,26 @@ fun SettingsScreen(
     val currency by preferencesManager.currencyFlow.collectAsState(initial = "CZK")
     val isDarkTheme by preferencesManager.themeFlow.collectAsState(initial = false)
     val notificationsEnabled by preferencesManager.notificationsFlow.collectAsState(initial = true)
-    val targetAmount by preferencesManager.targetAmountFlow.collectAsState(initial = 100000.0)
+
+    // Načítáme základní (uloženou) částku v CZK
+    val targetAmountBase by preferencesManager.targetAmountFlow.collectAsState(initial = 100000.0)
+
     val portfolioName by preferencesManager.portfolioNameFlow.collectAsState(initial = "Moje Portfolio")
 
     var showCurrencyDialog by remember { mutableStateOf(false) }
     var showTargetDialog by remember { mutableStateOf(false) }
-    var showNameDialog by remember { mutableStateOf(false) } // Nový dialog
+    var showNameDialog by remember { mutableStateOf(false) }
+
+    // --- PŘEPOČET KURZU (Stejná logika jako v PortfolioScreen) ---
+    val exchangeRate = when (currency) {
+        "USD" -> 0.044
+        "EUR" -> 0.040
+        "GBP" -> 0.034
+        else -> 1.0
+    }
+
+    // Částka pro zobrazení v UI (přepočtená)
+    val targetAmountDisplay = targetAmountBase * exchangeRate
 
     Scaffold(
         topBar = {
@@ -181,9 +195,10 @@ fun SettingsScreen(
                 ) {
                     Column {
                         Text(text = "Finanční cíl", style = MaterialTheme.typography.bodyLarge)
-                        Text(text = "Cílová částka portfolia", style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                        Text(text = "Cílová částka portfolia ($currency)", style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
                     }
-                    Text(text = "${String.format("%.0f", targetAmount)}", style = MaterialTheme.typography.bodyLarge, color = MaterialTheme.colorScheme.primary)
+                    // ZDE JE ZMĚNA: Používáme targetAmountDisplay (přepočtené)
+                    Text(text = "${String.format("%.0f", targetAmountDisplay)}", style = MaterialTheme.typography.bodyLarge, color = MaterialTheme.colorScheme.primary)
                 }
             }
 
@@ -205,7 +220,7 @@ fun SettingsScreen(
 
     // --- DIALOGY ---
 
-    // Nový dialog pro název portfolia
+    // Dialog pro jméno
     if (showNameDialog) {
         var tempName by remember { mutableStateOf(portfolioName) }
         AlertDialog(
@@ -235,7 +250,7 @@ fun SettingsScreen(
         )
     }
 
-    // Ostatní dialogy (měna, cíl) zůstávají stejné...
+    // Dialog pro měnu
     if (showCurrencyDialog) {
         AlertDialog(
             onDismissRequest = { showCurrencyDialog = false },
@@ -244,10 +259,22 @@ fun SettingsScreen(
                 Column {
                     listOf("CZK", "USD", "EUR", "GBP").forEach { currencyOption ->
                         Row(
-                            modifier = Modifier.fillMaxWidth().clickable { scope.launch { preferencesManager.setCurrency(currencyOption) }; showCurrencyDialog = false }.padding(vertical = 12.dp),
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .clickable {
+                                    scope.launch { preferencesManager.setCurrency(currencyOption) }
+                                    showCurrencyDialog = false
+                                }
+                                .padding(vertical = 12.dp),
                             verticalAlignment = Alignment.CenterVertically
                         ) {
-                            RadioButton(selected = currency == currencyOption, onClick = { scope.launch { preferencesManager.setCurrency(currencyOption) }; showCurrencyDialog = false })
+                            RadioButton(
+                                selected = currency == currencyOption,
+                                onClick = {
+                                    scope.launch { preferencesManager.setCurrency(currencyOption) }
+                                    showCurrencyDialog = false
+                                }
+                            )
                             Spacer(modifier = Modifier.width(8.dp))
                             Text(text = currencyOption)
                         }
@@ -258,13 +285,34 @@ fun SettingsScreen(
         )
     }
 
+    // Dialog pro Cíl - ZDE POZOR: Musíme uživatele nechat zadat částku v JEHO měně, ale uložit v CZK
     if (showTargetDialog) {
-        var tempAmount by remember { mutableStateOf(targetAmount.toString()) }
+        // Předvyplníme aktuální zobrazenou hodnotou (např. 4400 USD)
+        var tempAmount by remember { mutableStateOf(targetAmountDisplay.toString()) }
+
         AlertDialog(
             onDismissRequest = { showTargetDialog = false },
-            title = { Text("Nastavit finanční cíl") },
-            text = { OutlinedTextField(value = tempAmount, onValueChange = { tempAmount = it }, label = { Text("Částka") }, singleLine = true, keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number)) },
-            confirmButton = { TextButton(onClick = { val newAmount = tempAmount.toDoubleOrNull(); if (newAmount != null && newAmount > 0) { scope.launch { preferencesManager.setTargetAmount(newAmount) }; showTargetDialog = false } }) { Text("Uložit") } },
+            title = { Text("Nastavit finanční cíl ($currency)") },
+            text = {
+                OutlinedTextField(
+                    value = tempAmount,
+                    onValueChange = { tempAmount = it },
+                    label = { Text("Částka v $currency") },
+                    singleLine = true,
+                    keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number)
+                )
+            },
+            confirmButton = {
+                TextButton(onClick = {
+                    val inputAmount = tempAmount.toDoubleOrNull()
+                    if (inputAmount != null && inputAmount > 0) {
+                        // Přepočet zpět na CZK pro uložení
+                        val amountInCZK = inputAmount / exchangeRate
+                        scope.launch { preferencesManager.setTargetAmount(amountInCZK) }
+                        showTargetDialog = false
+                    }
+                }) { Text("Uložit") }
+            },
             dismissButton = { TextButton(onClick = { showTargetDialog = false }) { Text("Zrušit") } }
         )
     }

@@ -14,6 +14,7 @@ import androidx.compose.material.icons.filled.Home
 import androidx.compose.material.icons.filled.Info
 import androidx.compose.material.icons.filled.Menu
 import androidx.compose.material.icons.filled.Settings
+import androidx.compose.material.icons.filled.Star // Přidána ikona pro statistiky
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
@@ -37,7 +38,8 @@ fun PortfolioScreen(
     viewModel: InvestmentViewModel = viewModel(),
     onAddClick: () -> Unit = {},
     onInvestmentClick: (Investment) -> Unit = {},
-    onSettingsClick: () -> Unit = {}
+    onSettingsClick: () -> Unit = {},
+    onStatsClick: () -> Unit = {} // <--- NOVÝ PARAMETR PRO STATISTIKY
 ) {
     val investments by viewModel.investments.collectAsState()
     val isLoading by viewModel.isLoading.collectAsState()
@@ -98,6 +100,18 @@ fun PortfolioScreen(
                     selected = true,
                     onClick = { scope.launch { drawerState.close() } },
                     icon = { Icon(Icons.Default.Home, contentDescription = null) },
+                    modifier = Modifier.padding(NavigationDrawerItemDefaults.ItemPadding)
+                )
+
+                // NOVÁ Položka: Statistiky
+                NavigationDrawerItem(
+                    label = { Text(text = "Statistiky") },
+                    selected = false,
+                    onClick = {
+                        scope.launch { drawerState.close() }
+                        onStatsClick() // Volání navigace
+                    },
+                    icon = { Icon(Icons.Default.Star, contentDescription = null) },
                     modifier = Modifier.padding(NavigationDrawerItemDefaults.ItemPadding)
                 )
 
@@ -313,26 +327,43 @@ fun PortfolioStats(totalValue: Double, profitLoss: Double, currencySymbol: Strin
     }
 }
 
+
 @Composable
 fun DiversificationBar(investments: List<Investment>) {
     val dataByType = investments.groupBy { it.type }.mapValues { entry -> entry.value.sumOf { it.currentValue } }
     val totalValue = dataByType.values.sum()
     if (totalValue == 0.0) return
+
+    // DEFINICE BAREV (Sjednoceno se StatsScreen)
+    fun getColorForType(type: String): Color {
+        return when (type) {
+            "Akcie" -> Color(0xFFFFC107)      // Žlutá
+            "ETF" -> Color(0xFF2196F3)        // Modrá
+            "Kryptoměny" -> Color(0xFF4CAF50) // Zelená
+            else -> Color(0xFFF44336)         // Červená (pro ostatní)
+        }
+    }
+
     Card(modifier = Modifier.fillMaxWidth().padding(horizontal = 16.dp, vertical = 8.dp)) {
         Column(modifier = Modifier.padding(16.dp)) {
             Text(text = "Rozložení portfolia", style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Bold, modifier = Modifier.padding(bottom = 12.dp), color = MaterialTheme.colorScheme.onSurface)
+
+            // Pruhový graf
             Row(modifier = Modifier.fillMaxWidth().height(20.dp).clip(RoundedCornerShape(4.dp))) {
-                dataByType.entries.sortedByDescending { it.value }.forEachIndexed { index, entry ->
+                dataByType.entries.sortedByDescending { it.value }.forEach { entry ->
                     val weight = (entry.value / totalValue).toFloat()
-                    val color = when(index % 5) { 0 -> Color(0xFF4CAF50); 1 -> Color(0xFF2196F3); 2 -> Color(0xFFFFC107); 3 -> Color(0xFF9C27B0); else -> Color(0xFFF44336) }
+                    val color = getColorForType(entry.key) // Použití barvy podle typu
                     Box(modifier = Modifier.weight(weight).fillMaxHeight().background(color))
                 }
             }
+
             Spacer(modifier = Modifier.height(12.dp))
+
+            // Legenda
             Column {
-                dataByType.entries.sortedByDescending { it.value }.forEachIndexed { index, entry ->
+                dataByType.entries.sortedByDescending { it.value }.forEach { entry ->
                     val percentage = (entry.value / totalValue * 100)
-                    val color = when(index % 5) { 0 -> Color(0xFF4CAF50); 1 -> Color(0xFF2196F3); 2 -> Color(0xFFFFC107); 3 -> Color(0xFF9C27B0); else -> Color(0xFFF44336) }
+                    val color = getColorForType(entry.key) // Použití barvy podle typu
                     Row(modifier = Modifier.fillMaxWidth().padding(vertical = 4.dp), verticalAlignment = Alignment.CenterVertically) {
                         Box(modifier = Modifier.size(12.dp).background(color, CircleShape))
                         Spacer(modifier = Modifier.width(8.dp))
@@ -344,6 +375,7 @@ fun DiversificationBar(investments: List<Investment>) {
         }
     }
 }
+
 
 @Composable
 fun InvestmentCard(investment: Investment, exchangeRate: Double, currencySymbol: String, onClick: () -> Unit) {

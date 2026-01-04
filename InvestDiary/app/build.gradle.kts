@@ -18,6 +18,10 @@ android {
         versionName = "1.0"
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
+        composeOptions {
+            kotlinCompilerExtensionVersion = "1.5.8" // Nebo novější, dle tvé verze Kotlinu
+        }
+
     }
 
     buildTypes {

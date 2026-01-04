@@ -3,12 +3,16 @@ package com.example.investdiary
 import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavType
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
@@ -20,19 +24,17 @@ import com.example.investdiary.screens.AddInvestmentScreen
 import com.example.investdiary.screens.InvestmentDetailScreen
 import com.example.investdiary.screens.PortfolioScreen
 import com.example.investdiary.screens.SettingsScreen
+import com.example.investdiary.screens.StatsScreen // Import nové obrazovky
 import com.example.investdiary.ui.theme.InvestDiaryTheme
 import com.example.investdiary.viewmodel.InvestmentViewModel
-import androidx.lifecycle.viewmodel.compose.viewModel
 
 class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
 
-        // Načtení nastavení tématu (Dark/Light mode)
         val preferencesManager = PreferencesManager(applicationContext)
 
         setContent {
-            // Sledujeme změnu tématu
             val isDarkTheme by preferencesManager.themeFlow.collectAsState(initial = false)
 
             InvestDiaryTheme(darkTheme = isDarkTheme) {
@@ -42,7 +44,7 @@ class MainActivity : ComponentActivity() {
                 ) {
                     // --- NAVIGACE ---
                     val navController = rememberNavController()
-                    val viewModel: InvestmentViewModel = viewModel() // Sdílený ViewModel
+                    val viewModel: InvestmentViewModel = viewModel()
 
                     NavHost(
                         navController = navController,
@@ -59,8 +61,11 @@ class MainActivity : ComponentActivity() {
                                 onSettingsClick = {
                                     navController.navigate(Screen.Settings.route)
                                 },
+                                // Tady přidáváme navigaci na novou obrazovku statistik
+                                onStatsClick = {
+                                    navController.navigate(Screen.Stats.route)
+                                },
                                 onInvestmentClick = { investment ->
-                                    // Navigace na detail s ID investice
                                     navController.navigate(Screen.InvestmentDetail.route + "/${investment.id}")
                                 }
                             )
@@ -85,18 +90,28 @@ class MainActivity : ComponentActivity() {
                             )
                         }
 
-                        // 4. Investment Detail Screen (s argumentem ID)
+                        // 4. Stats Screen (NOVÁ OBRAZOVKA)
+                        composable(route = Screen.Stats.route) {
+                            StatsScreen(
+                                viewModel = viewModel,
+                                onNavigateBack = {
+                                    navController.popBackStack()
+                                }
+                            )
+                        }
+
+                        // 5. Investment Detail Screen
                         composable(
                             route = Screen.InvestmentDetail.route + "/{investmentId}",
                             arguments = listOf(
                                 navArgument("investmentId") {
-                                    type = NavType.StringType // ID je String (UUID)
+                                    type = NavType.StringType
                                 }
                             )
                         ) { entry ->
                             val investmentId = entry.arguments?.getString("investmentId")
-                            // Najdeme investici ve ViewModelu podle ID
-                            val investment = viewModel.getInvestmentById(investmentId)
+                            val investments by viewModel.investments.collectAsState()
+                            val investment = investments.find { it.id == investmentId }
 
                             if (investment != null) {
                                 InvestmentDetailScreen(
@@ -106,6 +121,13 @@ class MainActivity : ComponentActivity() {
                                         navController.popBackStack()
                                     }
                                 )
+                            } else {
+                                Box(
+                                    modifier = Modifier.fillMaxSize(),
+                                    contentAlignment = Alignment.Center
+                                ) {
+                                    CircularProgressIndicator()
+                                }
                             }
                         }
                     }

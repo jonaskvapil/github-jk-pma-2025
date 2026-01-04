@@ -1,9 +1,17 @@
-<resources xmlns:tools="http://schemas.android.com/tools">
-    <!-- Base application theme. -->
-    <style name="Base.Theme._013EduGame" parent="Theme.Material3.DayNight.NoActionBar">
-        <!-- Customize your light theme here. -->
-        <!-- <item name="colorPrimary">@color/my_light_primary</item> -->
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+
+    <!-- DŮLEŽITÉ: Použij "Theme.MaterialComponents.DayNight.NoActionBar.Bridge" -->
+    <style name="Base.Theme.013EduGame" parent="Theme.MaterialComponents.DayNight.NoActionBar.Bridge">
+
+        <!-- Barvy nech stejné -->
+        <item name="colorPrimary">@color/purple_500</item>
+        <item name="colorPrimaryVariant">@color/purple_700</item>
+        <item name="colorOnPrimary">@color/white</item>
+
+        <!-- Tyhle řádky tam už asi máš, nech je tam -->
+        <!-- ... -->
+
     </style>
 
-    <style name="Theme._013EduGame" parent="Base.Theme._013EduGame" />
 </resources>
