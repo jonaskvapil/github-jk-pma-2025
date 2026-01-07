@@ -88,11 +88,14 @@ class MainActivity : AppCompatActivity() {
             checkAnswer()
         }
 
+
         findViewById<Button>(R.id.btnRestart).setOnClickListener {
             viewModel.currentScore = 0
-            showScreen(layoutLogin) // Tady chceme updateNav = true (default), aby se přepla i ikona
+            viewModel.currentPlayerName = "" // PŘIDEJ TENTO ŘÁDEK (vymaže jméno)
+            showScreen(layoutLogin)
             etPlayerName.text.clear()
         }
+
     }
 
     private fun initViews() {
